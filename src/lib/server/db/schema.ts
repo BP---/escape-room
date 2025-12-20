@@ -105,3 +105,88 @@ export const accountRelations = relations(account, ({ one }) => ({
     references: [user.id],
   }),
 }));
+
+// Escape Room Tables
+
+export const escapeRoom = sqliteTable(
+  "escape_room",
+  {
+    id: text("id").primaryKey(),
+    title: text("title").notNull(),
+    description: text("description"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("escape_room_userId_idx").on(table.userId)],
+);
+
+export const chapter = sqliteTable(
+  "chapter",
+  {
+    id: text("id").primaryKey(),
+    chapterNumber: integer("chapter_number").notNull(),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    answer: text("answer").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
+    escapeRoomId: text("escape_room_id")
+      .notNull()
+      .references(() => escapeRoom.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("chapter_escapeRoomId_idx").on(table.escapeRoomId)],
+);
+
+export const hint = sqliteTable(
+  "hint",
+  {
+    id: text("id").primaryKey(),
+    hintNumber: integer("hint_number").notNull(),
+    content: text("content").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    chapterId: text("chapter_id")
+      .notNull()
+      .references(() => chapter.id, { onDelete: "cascade" }),
+  },
+  (table) => [index("hint_chapterId_idx").on(table.chapterId)],
+);
+
+// Escape Room Relations
+
+export const escapeRoomRelations = relations(escapeRoom, ({ one, many }) => ({
+  user: one(user, {
+    fields: [escapeRoom.userId],
+    references: [user.id],
+  }),
+  chapters: many(chapter),
+}));
+
+export const chapterRelations = relations(chapter, ({ one, many }) => ({
+  escapeRoom: one(escapeRoom, {
+    fields: [chapter.escapeRoomId],
+    references: [escapeRoom.id],
+  }),
+  hints: many(hint),
+}));
+
+export const hintRelations = relations(hint, ({ one }) => ({
+  chapter: one(chapter, {
+    fields: [hint.chapterId],
+    references: [chapter.id],
+  }),
+}));
