@@ -13,3 +13,12 @@ Route Structure:
 ---/chapterNumber
 -/create
 -/user
+
+A user should be able to register with github, using better-auth, and be logged in. A logged in user can go to the /create route, where there is a form to create escape rooms. 
+
+Database structure: 
+A user table, with data from github. 
+escape-rooms table, with title, reference to a user. 
+chapters table with reference to escape-room. 
+hints table with reference to chapters. 
+
