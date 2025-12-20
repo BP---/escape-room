@@ -90,12 +90,12 @@ export const actions = {
             });
 
             if (chapterNumber >= allChapters.length) {
-                // Last chapter completed
-                return { correct: true, completed: true };
+                // Last chapter completed - return answer for localStorage storage
+                return { correct: true, completed: true, answer: answer.trim() };
             }
 
-            // Redirect to next chapter
-            redirect(303, `/escape-room/${params.roomID}/${chapterNumber + 1}`);
+            // Return success with answer for localStorage, client will handle navigation
+            return { correct: true, completed: false, answer: answer.trim(), nextChapter: chapterNumber + 1 };
         }
 
         return fail(400, { error: 'Incorrect answer. Try again!', correct: false });

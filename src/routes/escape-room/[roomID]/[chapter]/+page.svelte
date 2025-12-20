@@ -2,13 +2,62 @@
     import type { PageProps } from './$types';
     import { enhance } from '$app/forms';
     import { SvelteSet } from 'svelte/reactivity';
+    import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
+    import { getRoomProgress, saveChapterAnswer } from '$lib/stores/progress';
 
     let { data, form }: PageProps = $props();
 
     let revealedHints = $state(new SvelteSet<string>());
+    let isValidating = $state(true);
+    let accessDenied = $state(false);
+    let redirectChapter = $state<number | null>(null);
+
+    onMount(async () => {
+        // Validate access to this chapter
+        const progress = getRoomProgress(data.room.id);
+        
+        try {
+            const response = await fetch(`/api/escape-room/${data.room.id}/${data.chapter.chapterNumber}/validate-access`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ progress })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                if (!result.allowed) {
+                    accessDenied = true;
+                    redirectChapter = result.redirectTo || 1;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to validate access:', error);
+        } finally {
+            isValidating = false;
+        }
+    });
+
+    // Save the answer to localStorage when form returns success and navigate
+    $effect(() => {
+        if (form?.correct && form?.answer) {
+            saveChapterAnswer(data.room.id, data.chapter.chapterNumber, form.answer);
+            
+            // Navigate to next chapter if not completed
+            if (!form.completed && form.nextChapter) {
+                goto(`/escape-room/${data.room.id}/${form.nextChapter}`);
+            }
+        }
+    });
 
     function revealHint(hintId: string) {
         revealedHints.add(hintId);
+    }
+
+    function goToAllowedChapter() {
+        if (redirectChapter) {
+            goto(`/escape-room/${data.room.id}/${redirectChapter}`);
+        }
     }
 </script>
 
@@ -17,6 +66,32 @@
 </svelte:head>
 
 <div class="container mx-auto max-w-4xl p-6">
+    {#if isValidating}
+        <div class="flex flex-col items-center justify-center py-16">
+            <span class="loading loading-spinner loading-lg"></span>
+            <p class="mt-4 text-base-content/60">Validating access...</p>
+        </div>
+    {:else if accessDenied}
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body items-center text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-16 h-16 text-warning mb-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+                <h2 class="card-title text-2xl">Chapter Locked</h2>
+                <p class="text-base-content/70">
+                    You need to complete the previous chapters first before accessing Chapter {data.chapter.chapterNumber}.
+                </p>
+                <div class="card-actions mt-4">
+                    <button onclick={goToAllowedChapter} class="btn btn-primary">
+                        Go to Chapter {redirectChapter}
+                    </button>
+                    <a href="/escape-room/{data.room.id}" class="btn btn-ghost">
+                        Back to Overview
+                    </a>
+                </div>
+            </div>
+        </div>
+    {:else}
     <div class="breadcrumbs text-sm mb-4">
         <ul>
             <li><a href="/escape-room/{data.room.id}">{data.room.title}</a></li>
@@ -121,17 +196,10 @@
         </div>
     </div>
 
-    <div class="flex justify-between mt-6">
-        {#if data.chapter.chapterNumber > 1}
-            <a href="/escape-room/{data.room.id}/{data.chapter.chapterNumber - 1}" class="btn btn-outline">
-                ← Previous Chapter
-            </a>
-        {:else}
-            <div></div>
-        {/if}
-
+    <div class="flex justify-center mt-6">
         <a href="/escape-room/{data.room.id}" class="btn btn-ghost">
             Back to Overview
         </a>
     </div>
+    {/if}
 </div>
