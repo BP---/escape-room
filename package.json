@@ -23,8 +23,9 @@
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/node": "^24",
+		"daisyui": "^5.5.14",
 		"drizzle-kit": "^0.31.8",
-		"drizzle-orm": "^0.45.0",
+		"drizzle-orm": "^0.41.0",
 		"svelte": "^5.45.6",
 		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
@@ -33,6 +34,7 @@
 		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
+		"better-auth": "^1.4.7",
 		"better-sqlite3": "^12.5.0"
 	}
 }
