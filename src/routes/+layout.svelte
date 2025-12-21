@@ -8,6 +8,6 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 <Header />
-<main class="container mx-auto p-4">
+<main class="container mx-auto">
 	{@render children()}
 </main>
