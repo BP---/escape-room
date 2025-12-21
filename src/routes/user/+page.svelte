@@ -1,7 +1,22 @@
 <script lang="ts">
     import type { PageData } from './$types';
+    import { enhance } from '$app/forms';
 
     let { data }: { data: PageData } = $props();
+    
+    let deleteModal = $state<{ open: boolean; roomId: string; roomTitle: string }>({
+        open: false,
+        roomId: '',
+        roomTitle: ''
+    });
+    
+    function openDeleteModal(roomId: string, roomTitle: string) {
+        deleteModal = { open: true, roomId, roomTitle };
+    }
+    
+    function closeDeleteModal() {
+        deleteModal = { open: false, roomId: '', roomTitle: '' };
+    }
 </script>
 
 <div class="container mx-auto px-4 py-8 max-w-4xl">
@@ -36,6 +51,13 @@
                             <a href="/escape-room/{room.id}" class="btn btn-primary btn-sm">
                                 View Room
                             </a>
+                            <button 
+                                type="button"
+                                class="btn btn-error btn-sm"
+                                onclick={() => openDeleteModal(room.id, room.title)}
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -47,3 +69,32 @@
         </div>
     {/if}
 </div>
+
+<!-- Delete Confirmation Modal -->
+<dialog class="modal" class:modal-open={deleteModal.open}>
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Confirm Delete</h3>
+        <p class="py-4">
+            Are you sure you want to delete <strong>{deleteModal.roomTitle}</strong>? 
+            This action cannot be undone and will delete all chapters and hints associated with this escape room.
+        </p>
+        <div class="modal-action">
+            <form method="POST" action="?/delete" use:enhance={() => {
+                return async ({ result }) => {
+                    if (result.type === 'success') {
+                        closeDeleteModal();
+                        // Reload the page to show updated list
+                        window.location.reload();
+                    }
+                };
+            }}>
+                <input type="hidden" name="roomId" value={deleteModal.roomId} />
+                <button type="submit" class="btn btn-error">Delete</button>
+            </form>
+            <button type="button" class="btn" onclick={closeDeleteModal}>Cancel</button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button type="button" onclick={closeDeleteModal}>close</button>
+    </form>
+</dialog>
