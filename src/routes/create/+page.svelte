@@ -109,6 +109,8 @@
                         <option value="dark">Dark</option>
                         <option value="mytheme">My Theme</option>
                         <option value="hacker">Hacker</option>
+                        <option value="treasure">Treasure</option>
+
                     </select>
                 </div>
             </div>
