@@ -10,12 +10,27 @@
         roomTitle: ''
     });
     
+    let copiedRoomId = $state<string | null>(null);
+    
     function openDeleteModal(roomId: string, roomTitle: string) {
         deleteModal = { open: true, roomId, roomTitle };
     }
     
     function closeDeleteModal() {
         deleteModal = { open: false, roomId: '', roomTitle: '' };
+    }
+    
+    async function shareRoom(roomId: string) {
+        const url = `${window.location.origin}/escape-room/${roomId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            copiedRoomId = roomId;
+            setTimeout(() => {
+                copiedRoomId = null;
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy link:', err);
+        }
     }
 </script>
 
@@ -37,7 +52,7 @@
         </div>
     {:else}
         <div class="grid gap-4 md:grid-cols-2">
-            {#each data.escapeRooms as room}
+            {#each data.escapeRooms as room (room.id)}
                 <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
                     <div class="card-body">
                         <h2 class="card-title">{room.title}</h2>
@@ -51,6 +66,20 @@
                             <a href="/escape-room/{room.id}" class="btn btn-primary btn-sm">
                                 View Room
                             </a>
+                            <div class="relative">
+                                <button 
+                                    type="button"
+                                    class="btn btn-info btn-sm"
+                                    onclick={() => shareRoom(room.id)}
+                                >
+                                    Share
+                                </button>
+                                {#if copiedRoomId === room.id}
+                                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-success text-success-content px-3 py-1 rounded text-xs whitespace-nowrap">
+                                        Link copied!
+                                    </div>
+                                {/if}
+                            </div>
                             <button 
                                 type="button"
                                 class="btn btn-error btn-sm"
