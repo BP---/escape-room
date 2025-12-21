@@ -22,3 +22,5 @@ escape-rooms table, with title, reference to a user, a theme for the escape-room
 chapters table with reference to escape-room. 
 hints table with reference to chapters. 
 
+
+A non-registered user has their progress saved in localstorage, with the id of each room they have made progress in. The chapters and answers to the chapters are stored as objects for the different rooms. Example: {97c8fcc271b880d5b3f9885b: {1: "a"}, afd49d7a8451c25e70ede65c: {1: "1"}}
