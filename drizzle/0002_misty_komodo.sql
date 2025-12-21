@@ -1,0 +1,1 @@
+ALTER TABLE `escape_room` ADD `theme` text DEFAULT 'light' NOT NULL;

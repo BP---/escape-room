@@ -3,6 +3,6 @@
 
     let { data, children }: LayoutProps = $props();
 </script>
-<div data-theme="mytheme">
+<div data-theme={data.theme}>
     {@render children()}
 </div>

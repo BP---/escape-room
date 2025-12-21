@@ -114,6 +114,7 @@ export const escapeRoom = sqliteTable(
     id: text("id").primaryKey(),
     title: text("title").notNull(),
     description: text("description"),
+    theme: text("theme").default("light").notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
