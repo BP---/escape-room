@@ -31,3 +31,31 @@
   --color-error: oklch(65% 0.3 30);
   --color-error-content: oklch(98% 0.01 30);
 }
+
+@plugin "daisyui/theme" {
+  name: "hacker";
+  default: false; /* set as default */
+  prefersdark: true; /* set as default dark mode (prefers-color-scheme:dark) */
+  color-scheme: dark; /* color of browser-provided UI */
+
+  --color-base-100: oklch(10% 0.01 150);
+  --color-base-200: oklch(18% 0.03 150);
+  --color-base-300: oklch(25% 0.04 150);
+  --color-base-content: oklch(75% 0.25 150);
+  --color-primary: oklch(75% 0.25 150);
+  --color-primary-content: oklch(10% 0.01 150);
+  --color-secondary: oklch(60% 0.2 150);
+  --color-secondary-content: oklch(10% 0.01 150);
+  --color-accent: oklch(70% 0.22 140);
+  --color-accent-content: oklch(10% 0.01 140);
+  --color-neutral: oklch(15% 0.02 150);
+  --color-neutral-content: oklch(75% 0.25 150);
+  --color-info: oklch(70% 0.2 180);
+  --color-info-content: oklch(10% 0.01 180);
+  --color-success: oklch(75% 0.25 150);
+  --color-success-content: oklch(10% 0.01 150);
+  --color-warning: oklch(75% 0.2 90);
+  --color-warning-content: oklch(10% 0.01 90);
+  --color-error: oklch(65% 0.25 25);
+  --color-error-content: oklch(10% 0.01 25);
+}
