@@ -101,13 +101,7 @@
         <div class="space-y-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-bold">Chapters</h2>
-                <button 
-                    type="button" 
-                    class="btn btn-primary"
-                    onclick={addChapter}
-                >
-                    + Add Chapter
-                </button>
+                
             </div>
 
             {#each chapters as chapter, chapterIndex (chapter.id)}
@@ -210,6 +204,16 @@
                 </div>
             {/if}
         </div>
+        <div class="flex justify-between items-center">
+                
+                <button 
+                    type="button" 
+                    class="btn btn-primary"
+                    onclick={addChapter}
+                >
+                    + Add Chapter
+                </button>
+            </div>
 
         <div class="flex justify-end">
             <button type="submit" class="btn btn-primary btn-lg">
