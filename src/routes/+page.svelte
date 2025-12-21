@@ -20,7 +20,11 @@
 					Continue Playing
 				</a>
 			</div>
-			{#if !data.user}
+			{#if data.user}
+				<div class="mt-6">
+					<a href="/user" class="link link-hover">View my creations</a>
+				</div>
+			{:else}
 				<div class="mt-6">
 					<a href="/login" class="link link-hover">Login to get started</a>
 				</div>
