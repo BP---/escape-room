@@ -1,12 +1,13 @@
 <script lang="ts">
     import type { PageProps } from './$types';
     import { onMount } from 'svelte';
-    import { getRoomProgress } from '$lib/stores/progress';
+    import { getRoomProgress, clearRoomProgress } from '$lib/stores/progress';
 
     let { data }: PageProps = $props();
 
     let unlockedChapters = $state<number[]>([1]); // Chapter 1 is always unlocked
     let isLoading = $state(true);
+    let showClearModal = $state(false);
 
     onMount(async () => {
         const progress = getRoomProgress(data.room.id);
@@ -36,6 +37,13 @@
     function getFirstUnlockedChapter(): number {
         // Return the highest unlocked chapter (the one the user should be working on)
         return Math.max(...unlockedChapters);
+    }
+
+    function handleClearProgress(): void {
+        clearRoomProgress(data.room.id);
+        showClearModal = false;
+        // Refresh the page to reset state
+        window.location.reload();
     }
 </script>
 
@@ -111,7 +119,7 @@
             {/each}
         </div>
 
-        <div class="mt-6">
+        <div class="mt-6 flex gap-3 flex-wrap">
             <a href="/escape-room/{data.room.id}/{getFirstUnlockedChapter()}" class="btn btn-primary btn-lg">
                 {#if getFirstUnlockedChapter() === 1}
                     Start Escape Room
@@ -119,6 +127,30 @@
                     Continue from Chapter {getFirstUnlockedChapter()}
                 {/if}
             </a>
+            <button class="btn btn-outline btn-error btn-lg" onclick={() => showClearModal = true}>
+                Clear Progress
+            </button>
         </div>
     {/if}
 </div>
+
+<!-- Clear Progress Confirmation Modal -->
+<dialog class="modal" class:modal-open={showClearModal}>
+    <div class="modal-box">
+        <h3 class="text-lg font-bold">Clear Progress?</h3>
+        <p class="py-4">
+            Are you sure you want to clear your progress for this escape room? 
+            <span class="text-error font-semibold">This action cannot be undone.</span>
+        </p>
+        <p class="text-sm text-base-content/70">
+            All your answers will be erased and you will start from Chapter 1.
+        </p>
+        <div class="modal-action">
+            <button class="btn" onclick={() => showClearModal = false}>Cancel</button>
+            <button class="btn btn-error" onclick={handleClearProgress}>Clear Progress</button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick={() => showClearModal = false}>close</button>
+    </form>
+</dialog>
