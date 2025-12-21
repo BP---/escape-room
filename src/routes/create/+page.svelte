@@ -19,6 +19,7 @@
 
     let title = $state('');
     let description = $state('');
+    let theme = $state('light');
     let chapters = $state<Chapter[]>([]);
     let nextChapterId = $state(1);
     let nextHintId = $state(1);
@@ -92,6 +93,23 @@
                         placeholder="Enter escape room description" 
                         class="textarea textarea-bordered w-full h-24"
                     ></textarea>
+                </div>
+
+                <div class="form-control w-full">
+                    <label class="label" for="theme">
+                        <span class="label-text">Theme</span>
+                    </label>
+                    <select 
+                        id="theme"
+                        name="theme" 
+                        bind:value={theme}
+                        class="select select-bordered w-full"
+                    >
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="mytheme">My Theme</option>
+                        <option value="hacker">Hacker</option>
+                    </select>
                 </div>
             </div>
         </div>

@@ -35,6 +35,7 @@ export const actions = {
         const formData = await request.formData();
         const title = formData.get('title') as string;
         const description = formData.get('description') as string;
+        const theme = formData.get('theme') as string;
         const chaptersData = formData.get('chaptersData') as string;
 
         if (!title || title.trim() === '') {
@@ -72,6 +73,7 @@ export const actions = {
                 id: escapeRoomId,
                 title: title.trim(),
                 description: description?.trim() || null,
+                theme: theme || 'light',
                 userId: locals.user.id
             });
 
