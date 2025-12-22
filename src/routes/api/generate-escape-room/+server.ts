@@ -1,8 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import { env } from '$env/dynamic/private';
 
 const hintSchema = z.object({
@@ -62,14 +61,69 @@ The difficulty should progress from easier to harder chapters.
 
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: SchemaType.OBJECT,
+                    properties: {
+                        title: {
+                            type: SchemaType.STRING,
+                            description: "The title of the escape room.",
+                        },
+                        description: {
+                            type: SchemaType.STRING,
+                            description: "A brief description of the escape room scenario.",
+                        },
+                        theme: {
+                            type: SchemaType.STRING,
+                            format: "enum",
+                            enum: ["light", "dark", "mytheme", "hacker", "treasure"],
+                            description: "The visual theme for the escape room.",
+                        },
+                        chapters: {
+                            type: SchemaType.ARRAY,
+                            items: {
+                                type: SchemaType.OBJECT,
+                                properties: {
+                                    title: {
+                                        type: SchemaType.STRING,
+                                        description: "The title of the chapter.",
+                                    },
+                                    content: {
+                                        type: SchemaType.STRING,
+                                        description: "The main content of the chapter, including puzzles, riddles, or story elements.",
+                                    },
+                                    answer: {
+                                        type: SchemaType.STRING,
+                                        description: "The correct answer to the chapter's puzzle (lowercase, no extra spaces).",
+                                    },
+                                    hints: {
+                                        type: SchemaType.ARRAY,
+                                        items: {
+                                            type: SchemaType.OBJECT,
+                                            properties: {
+                                                content: {
+                                                    type: SchemaType.STRING,
+                                                    description: "The hint text to help solve the puzzle.",
+                                                },
+                                            },
+                                            required: ["content"],
+                                        },
+                                        description: "Array of hints to help solve the chapter.",
+                                    },
+                                },
+                                required: ["title", "content", "answer", "hints"],
+                            },
+                            description: "Array of chapters/puzzles in the escape room.",
+                        },
+                    },
+                    required: ["title", "description", "theme", "chapters"],
+                },
+            },
         });
 
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: zodToJsonSchema(escapeRoomSchema) as any,
-            },
         });
 
         const responseText = result.response.text();
