@@ -1,0 +1,88 @@
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
+import { env } from '$env/dynamic/private';
+
+const hintSchema = z.object({
+    content: z.string().describe("The hint text to help solve the puzzle."),
+});
+
+const chapterSchema = z.object({
+    title: z.string().describe("The title of the chapter."),
+    content: z.string().describe("The main content of the chapter, including puzzles, riddles, or story elements."),
+    answer: z.string().describe("The correct answer to the chapter's puzzle (lowercase, no extra spaces)."),
+    hints: z.array(hintSchema).describe("Array of hints to help solve the chapter."),
+});
+
+const escapeRoomSchema = z.object({
+    title: z.string().describe("The title of the escape room."),
+    description: z.string().describe("A brief description of the escape room scenario."),
+    theme: z.enum(["light", "dark", "mytheme", "hacker", "treasure"]).describe("The visual theme for the escape room."),
+    chapters: z.array(chapterSchema).min(1).describe("Array of chapters/puzzles in the escape room."),
+});
+
+export const POST: RequestHandler = async ({ request, locals }) => {
+    // Check if user is logged in
+    if (!locals.user) {
+        return error(401, { message: 'You must be logged in to generate an escape room' });
+    }
+
+    try {
+        const { prompt } = await request.json();
+
+        if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
+            return error(400, { message: 'Prompt is required' });
+        }
+
+        // Check for API key
+        const apiKey = env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return error(500, { message: 'Gemini API key not configured' });
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        const fullPrompt = `
+Create an engaging escape room based on the following description: "${prompt}"
+
+Generate a complete escape room with:
+- A compelling title and description
+- 3-5 chapters/puzzles that fit the theme
+- Each chapter should have:
+  - A descriptive title
+  - Rich content that sets the scene and presents the puzzle
+  - A clear answer (keep it simple, one word or short phrase)
+  - 2-4 helpful hints that progressively guide players
+  
+Make the puzzles creative, varied (riddles, logic, wordplay, codes, etc.), and thematically consistent.
+The difficulty should progress from easier to harder chapters.
+`;
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+        });
+
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: fullPrompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: zodToJsonSchema(escapeRoomSchema) as any,
+            },
+        });
+
+        const responseText = result.response.text();
+        const escapeRoomData = escapeRoomSchema.parse(JSON.parse(responseText));
+
+        return json(escapeRoomData);
+    } catch (err) {
+        console.error('Error generating escape room:', err);
+        
+        if (err instanceof z.ZodError) {
+            return error(500, { message: 'Failed to parse AI response. Please try again.' });
+        }
+        
+        return error(500, { message: 'Failed to generate escape room. Please try again.' });
+    }
+};

@@ -23,6 +23,10 @@
     let chapters = $state<Chapter[]>([]);
     let nextChapterId = $state(1);
     let nextHintId = $state(1);
+    let isGenerating = $state(false);
+    let generateError = $state('');
+    let showPromptModal = $state(false);
+    let aiPrompt = $state('');
 
     // Sample JSON data for testing
     const sampleEscapeRoomJson = {
@@ -61,12 +65,12 @@
         ]
     };
 
-    function populateFromJson() {
-        title = sampleEscapeRoomJson.title;
-        description = sampleEscapeRoomJson.description;
-        theme = sampleEscapeRoomJson.theme;
+    function populateFromJson(jsonData: typeof sampleEscapeRoomJson) {
+        title = jsonData.title;
+        description = jsonData.description;
+        theme = jsonData.theme;
         
-        chapters = sampleEscapeRoomJson.chapters.map(ch => ({
+        chapters = jsonData.chapters.map(ch => ({
             id: nextChapterId++,
             title: ch.title,
             content: ch.content,
@@ -76,6 +80,53 @@
                 content: h.content
             }))
         }));
+    }
+
+    function loadSampleData() {
+        populateFromJson(sampleEscapeRoomJson);
+    }
+
+    function openPromptModal() {
+        showPromptModal = true;
+        aiPrompt = '';
+        generateError = '';
+    }
+
+    function closePromptModal() {
+        showPromptModal = false;
+    }
+
+    async function generateWithAI() {
+        if (!aiPrompt.trim()) {
+            generateError = 'Please enter a description';
+            return;
+        }
+
+        isGenerating = true;
+        generateError = '';
+
+        try {
+            const response = await fetch('/api/generate-escape-room', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: aiPrompt }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to generate escape room');
+            }
+
+            const generatedData = await response.json();
+            populateFromJson(generatedData);
+            closePromptModal();
+        } catch (err) {
+            generateError = err instanceof Error ? err.message : 'An error occurred';
+        } finally {
+            isGenerating = false;
+        }
     }
 
     function addChapter() {
@@ -104,13 +155,22 @@
 <div class="container mx-auto max-w-4xl p-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold">Create Escape Room</h1>
-        <button 
-            type="button" 
-            class="btn btn-secondary"
-            onclick={populateFromJson}
-        >
-            Load Sample Data
-        </button>
+        <div class="flex gap-2">
+            <button 
+                type="button" 
+                class="btn btn-secondary btn-sm"
+                onclick={loadSampleData}
+            >
+                Load Sample Data
+            </button>
+            <button 
+                type="button" 
+                class="btn btn-primary btn-sm"
+                onclick={openPromptModal}
+            >
+                ✨ Generate with AI
+            </button>
+        </div>
     </div>
 
     {#if form?.success}
@@ -288,20 +348,70 @@
             {/if}
         </div>
         <div class="flex justify-between items-center">
-                
-                <button 
-                    type="button" 
-                    class="btn btn-primary"
-                    onclick={addChapter}
-                >
-                    + Add Chapter
-                </button>
-            </div>
+            <button 
+                type="button" 
+                class="btn btn-primary"
+                onclick={addChapter}
+            >
+                + Add Chapter
+            </button>
 
-        <div class="flex justify-end">
             <button type="submit" class="btn btn-primary btn-lg">
                 Create Escape Room
             </button>
         </div>
     </form>
 </div>
+
+<!-- AI Generation Modal -->
+{#if showPromptModal}
+    <div class="modal modal-open">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">Generate Escape Room with AI</h3>
+            
+            <div class="form-control w-full">
+                <label class="label" for="ai-prompt">
+                    <span class="label-text">Describe your escape room</span>
+                </label>
+                <textarea 
+                    id="ai-prompt"
+                    bind:value={aiPrompt}
+                    placeholder="E.g., 'A pirate-themed escape room with treasure hunting puzzles' or 'A cyberpunk hacking challenge set in a dystopian future'"
+                    class="textarea textarea-bordered w-full h-24"
+                    disabled={isGenerating}
+                ></textarea>
+            </div>
+
+            {#if generateError}
+                <div class="alert alert-error mt-4">
+                    <span>{generateError}</span>
+                </div>
+            {/if}
+
+            <div class="modal-action">
+                <button 
+                    type="button" 
+                    class="btn btn-ghost"
+                    onclick={closePromptModal}
+                    disabled={isGenerating}
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="button" 
+                    class="btn btn-primary"
+                    onclick={generateWithAI}
+                    disabled={isGenerating}
+                >
+                    {#if isGenerating}
+                        <span class="loading loading-spinner"></span>
+                        Generating...
+                    {:else}
+                        Generate
+                    {/if}
+                </button>
+            </div>
+        </div>
+        <div class="modal-backdrop" onclick={closePromptModal}></div>
+    </div>
+{/if}
