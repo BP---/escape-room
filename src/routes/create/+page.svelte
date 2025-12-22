@@ -24,6 +24,60 @@
     let nextChapterId = $state(1);
     let nextHintId = $state(1);
 
+    // Sample JSON data for testing
+    const sampleEscapeRoomJson = {
+        title: "The Mystery Mansion",
+        description: "A haunted mansion with secrets to uncover. Can you solve all the puzzles and escape?",
+        theme: "dark",
+        chapters: [
+            {
+                title: "The Entrance Hall",
+                content: "You stand in a dimly lit entrance hall. A grandfather clock ticks ominously in the corner, showing 11:47. Above the fireplace, a portrait of a stern-looking man seems to follow your movements. On a side table, you notice a dusty book with a symbol on its cover.",
+                answer: "midnight",
+                hints: [
+                    { content: "Look at the clock more carefully. What time comes after 11:47?" },
+                    { content: "The portrait seems important. What happens at the witching hour?" }
+                ]
+            },
+            {
+                title: "The Library",
+                content: "Shelves upon shelves of ancient books surround you. In the center, a reading desk has an open book with a riddle: 'I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?'",
+                answer: "map",
+                hints: [
+                    { content: "Think about representations, not real things." },
+                    { content: "What shows all these things but isn't the real thing?" },
+                    { content: "Travelers use this to find their way." }
+                ]
+            },
+            {
+                title: "The Secret Study",
+                content: "Behind a bookshelf, you discover a hidden study. On the wall is a mathematical puzzle: 'I am a three-digit number. My tens digit is five more than my ones digit. My hundreds digit is eight less than my tens digit. What number am I?'",
+                answer: "194",
+                hints: [
+                    { content: "Start with the relationship between tens and ones digit." },
+                    { content: "If ones digit is 4, tens would be 9, and hundreds would be 1." }
+                ]
+            }
+        ]
+    };
+
+    function populateFromJson() {
+        title = sampleEscapeRoomJson.title;
+        description = sampleEscapeRoomJson.description;
+        theme = sampleEscapeRoomJson.theme;
+        
+        chapters = sampleEscapeRoomJson.chapters.map(ch => ({
+            id: nextChapterId++,
+            title: ch.title,
+            content: ch.content,
+            answer: ch.answer,
+            hints: ch.hints.map(h => ({
+                id: nextHintId++,
+                content: h.content
+            }))
+        }));
+    }
+
     function addChapter() {
         chapters.push({
             id: nextChapterId++,
@@ -48,7 +102,16 @@
 </script>
 
 <div class="container mx-auto max-w-4xl p-6">
-    <h1 class="text-3xl font-bold mb-6">Create Escape Room</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Create Escape Room</h1>
+        <button 
+            type="button" 
+            class="btn btn-secondary"
+            onclick={populateFromJson}
+        >
+            Load Sample Data
+        </button>
+    </div>
 
     {#if form?.success}
         <div class="alert alert-success mb-6">
