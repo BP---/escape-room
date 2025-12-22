@@ -412,6 +412,6 @@
                 </button>
             </div>
         </div>
-        <div class="modal-backdrop" onclick={closePromptModal}></div>
+        <div class="modal-backdrop" onclick={closePromptModal} onkeydown={(e) => e.key === 'Enter' && closePromptModal()} role="button" tabindex="0"></div>
     </div>
 {/if}
