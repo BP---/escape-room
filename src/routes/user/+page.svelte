@@ -66,6 +66,9 @@
                             <a href="/escape-room/{room.id}" class="btn btn-primary btn-sm">
                                 View Room
                             </a>
+                            <a href="/edit/{room.id}" class="btn btn-secondary btn-sm">
+                                Edit
+                            </a>
                             <div class="relative">
                                 <button 
                                     type="button"
