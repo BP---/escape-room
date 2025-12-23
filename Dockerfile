@@ -57,7 +57,7 @@ RUN echo '#!/bin/sh' > /app/entrypoint.sh && \
     echo 'set -e' >> /app/entrypoint.sh && \
     echo '' >> /app/entrypoint.sh && \
     echo 'echo "Running database migrations..."' >> /app/entrypoint.sh && \
-    echo 'npm run db:push' >> /app/entrypoint.sh && \
+    echo 'npx drizzle-kit push --force' >> /app/entrypoint.sh && \
     echo '' >> /app/entrypoint.sh && \
     echo 'echo "Starting application..."' >> /app/entrypoint.sh && \
     echo 'exec node build' >> /app/entrypoint.sh && \
