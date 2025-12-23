@@ -34,6 +34,9 @@ COPY --from=builder /app/build ./build
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 
+# Copy schema files for drizzle-kit
+COPY --from=builder /app/src/lib/server/db ./src/lib/server/db
+
 # Copy other necessary files
 COPY svelte.config.js ./
 COPY vite.config.ts ./
