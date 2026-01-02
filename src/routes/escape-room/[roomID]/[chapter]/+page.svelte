@@ -2,18 +2,85 @@
     import type { PageProps } from './$types';
     import { enhance } from '$app/forms';
     import { SvelteSet } from 'svelte/reactivity';
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { goto } from '$app/navigation';
     import { getRoomProgress, saveChapterAnswer } from '$lib/stores/progress';
 
     let { data, form }: PageProps = $props();
 
-    let revealedHints = $state(new SvelteSet<string>());
+    let revealedHints = new SvelteSet<string>();
     let isValidating = $state(true);
     let accessDenied = $state(false);
     let redirectChapter = $state<number | null>(null);
+    
+    // Speech synthesis state
+    let isSpeaking = $state(false);
+    let speechSupported = $state(false);
+    
+    function speakChapter() {
+        if (!speechSupported || !window.speechSynthesis) return;
+        
+        // Stop any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(data.chapter.content);
+        
+        // Get US English voice
+        const voices = window.speechSynthesis.getVoices();
+        const usEnglishVoice = voices.find(voice => 
+            voice.lang === 'en-US'
+        );
+        
+        if (usEnglishVoice) {
+            utterance.voice = usEnglishVoice;
+        }
+        
+        utterance.lang = 'en-US';
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        
+        utterance.onstart = () => {
+            isSpeaking = true;
+        };
+        
+        utterance.onend = () => {
+            isSpeaking = false;
+        };
+        
+        utterance.onerror = () => {
+            isSpeaking = false;
+        };
+        
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    function stopSpeaking() {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            isSpeaking = false;
+        }
+    }
+    
+    function toggleSpeech() {
+        if (isSpeaking) {
+            stopSpeaking();
+        } else {
+            speakChapter();
+        }
+    }
 
     onMount(async () => {
+        // Check for speech synthesis support
+        speechSupported = 'speechSynthesis' in window;
+        
+        // Load voices (they may load asynchronously)
+        if (speechSupported && window.speechSynthesis) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => {
+                window.speechSynthesis.getVoices();
+            };
+        }
+        
         // Validate access to this chapter
         const progress = getRoomProgress(data.room.id);
         
@@ -35,6 +102,13 @@
             console.error('Failed to validate access:', error);
         } finally {
             isValidating = false;
+        }
+    });
+    
+    // Clean up speech synthesis when leaving the page
+    onDestroy(() => {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
         }
     });
 
@@ -101,10 +175,31 @@
 
     <div class="card bg-base-200 shadow-xl mb-6">
         <div class="card-body">
-            <h1 class="card-title text-3xl">{data.chapter.title}</h1>
-            <p class="text-sm text-base-content/60">
-                Chapter {data.chapter.chapterNumber} of {data.totalChapters}
-            </p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="card-title text-3xl">{data.chapter.title}</h1>
+                    <p class="text-sm text-base-content/60">
+                        Chapter {data.chapter.chapterNumber} of {data.totalChapters}
+                    </p>
+                </div>
+                {#if speechSupported}
+                    <button 
+                        onclick={toggleSpeech}
+                        class="btn btn-circle btn-ghost"
+                        title={isSpeaking ? 'Stop reading' : 'Read aloud'}
+                    >
+                        {#if isSpeaking}
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z" />
+                            </svg>
+                        {:else}
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+                            </svg>
+                        {/if}
+                    </button>
+                {/if}
+            </div>
             
             <div class="divider"></div>
             
