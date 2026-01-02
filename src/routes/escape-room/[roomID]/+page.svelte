@@ -2,6 +2,7 @@
     import type { PageProps } from './$types';
     import { onMount } from 'svelte';
     import { getRoomProgress, clearRoomProgress } from '$lib/stores/progress';
+    import SpeechPlayer from '$lib/components/SpeechPlayer.svelte';
 
     let { data }: PageProps = $props();
 
@@ -54,10 +55,17 @@
 <div class="container mx-auto max-w-4xl p-6">
     <div class="card bg-base-200 shadow-xl mb-6">
         <div class="card-body">
-            <h1 class="card-title text-3xl">{data.room.title}</h1>
-            <p class="text-sm text-base-content/60">
-                Created by {data.room.author}
-            </p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="card-title text-3xl">{data.room.title}</h1>
+                    <p class="text-sm text-base-content/60">
+                        Created by {data.room.author}
+                    </p>
+                </div>
+                {#if data.room.description}
+                    <SpeechPlayer text={data.room.description} />
+                {/if}
+            </div>
 
             {#if data.room.description}
                 <div class="divider"></div>
