@@ -5,10 +5,11 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { getRoomProgress, saveChapterAnswer } from '$lib/stores/progress';
+    import SpeechPlayer from '$lib/components/SpeechPlayer.svelte';
 
     let { data, form }: PageProps = $props();
 
-    let revealedHints = $state(new SvelteSet<string>());
+    let revealedHints = new SvelteSet<string>();
     let isValidating = $state(true);
     let accessDenied = $state(false);
     let redirectChapter = $state<number | null>(null);
@@ -101,10 +102,15 @@
 
     <div class="card bg-base-200 shadow-xl mb-6">
         <div class="card-body">
-            <h1 class="card-title text-3xl">{data.chapter.title}</h1>
-            <p class="text-sm text-base-content/60">
-                Chapter {data.chapter.chapterNumber} of {data.totalChapters}
-            </p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="card-title text-3xl">{data.chapter.title}</h1>
+                    <p class="text-sm text-base-content/60">
+                        Chapter {data.chapter.chapterNumber} of {data.totalChapters}
+                    </p>
+                </div>
+                <SpeechPlayer text={data.chapter.content} />
+            </div>
             
             <div class="divider"></div>
             
