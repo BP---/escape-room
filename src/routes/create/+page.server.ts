@@ -44,6 +44,7 @@ export const actions = {
         const description = formData.get('description') as string;
         const theme = formData.get('theme') as string;
         const chaptersData = formData.get('chaptersData') as string;
+        const wantsPremiumVoice = formData.get('wantsPremiumVoice') === 'true';
 
         if (!title || title.trim() === '') {
             return fail(400, { error: 'Title is required', success: false });
@@ -90,11 +91,11 @@ export const actions = {
                 const chapterId = generateId();
                 const chapterContent = ch.content.trim();
 
-                // For premium users, generate audio for the chapter content
+                // For premium users who want voice, generate audio for the chapter content
                 let audioUrl: string | null = null;
                 let audioTextHash: string | null = null;
 
-                if (isPremium) {
+                if (isPremium && wantsPremiumVoice) {
                     try {
                         const audioArrayBuffer = await generateSpeech(chapterContent);
                         const audioBuffer = Buffer.from(audioArrayBuffer);
