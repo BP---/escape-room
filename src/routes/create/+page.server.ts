@@ -3,9 +3,15 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { escapeRoom, chapter, hint } from '$lib/server/db/schema';
 import crypto from 'crypto';
+import { generateSpeech } from '$lib/server/elevenlabs';
+import { uploadAudio } from '$lib/server/r2';
 
 function generateId(): string {
     return crypto.randomBytes(12).toString('hex');
+}
+
+function hashText(text: string): string {
+    return crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 }
 
 export const load = (async ({ locals }) => {
@@ -69,6 +75,7 @@ export const actions = {
 
         try {
             const escapeRoomId = generateId();
+            const isPremium = locals.user.premium ?? false;
 
             await db.insert(escapeRoom).values({
                 id: escapeRoomId,
@@ -81,13 +88,34 @@ export const actions = {
             for (let i = 0; i < chapters.length; i++) {
                 const ch = chapters[i];
                 const chapterId = generateId();
+                const chapterContent = ch.content.trim();
+
+                // For premium users, generate audio for the chapter content
+                let audioUrl: string | null = null;
+                let audioTextHash: string | null = null;
+
+                if (isPremium) {
+                    try {
+                        const audioArrayBuffer = await generateSpeech(chapterContent);
+                        const audioBuffer = Buffer.from(audioArrayBuffer);
+                        const timestamp = Date.now();
+                        const fileKey = `rooms/${escapeRoomId}/chapters/${chapterId}-${timestamp}.mp3`;
+                        audioUrl = await uploadAudio(audioBuffer, fileKey, 'audio/mpeg');
+                        audioTextHash = hashText(chapterContent);
+                    } catch (audioError) {
+                        // Log but don't fail the entire creation if audio generation fails
+                        console.error(`Failed to generate audio for chapter ${i + 1}:`, audioError);
+                    }
+                }
 
                 await db.insert(chapter).values({
                     id: chapterId,
                     chapterNumber: i + 1,
                     title: ch.title.trim(),
-                    content: ch.content.trim(),
+                    content: chapterContent,
                     answer: ch.answer.trim().toLowerCase(),
+                    audioUrl,
+                    audioTextHash,
                     escapeRoomId: escapeRoomId
                 });
 

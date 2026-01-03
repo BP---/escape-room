@@ -140,6 +140,8 @@ export const chapter = sqliteTable(
     title: text("title").notNull(),
     content: text("content").notNull(),
     answer: text("answer").notNull(),
+    audioUrl: text("audio_url"),
+    audioTextHash: text("audio_text_hash"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),

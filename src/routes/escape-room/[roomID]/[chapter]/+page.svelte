@@ -6,6 +6,7 @@
     import { goto } from '$app/navigation';
     import { getRoomProgress, saveChapterAnswer } from '$lib/stores/progress';
     import SpeechPlayer from '$lib/components/SpeechPlayer.svelte';
+    import AudioPlayer from '$lib/components/AudioPlayer.svelte';
 
     let { data, form }: PageProps = $props();
 
@@ -109,7 +110,11 @@
                         Chapter {data.chapter.chapterNumber} of {data.totalChapters}
                     </p>
                 </div>
-                <SpeechPlayer text={data.chapter.content} />
+                {#if data.chapter.audioUrl}
+                    <AudioPlayer src={data.chapter.audioUrl} />
+                {:else}
+                    <SpeechPlayer text={data.chapter.content} />
+                {/if}
             </div>
             
             <div class="divider"></div>
