@@ -29,6 +29,41 @@
     let generateError = $state('');
     let showPromptModal = $state(false);
     let aiPrompt = $state('');
+    let showPremiumVoiceModal = $state(false);
+    let wantsPremiumVoice = $state(false);
+    let formElement: HTMLFormElement | undefined = $state();
+    let isCreating = $state(false);
+    let currentPhraseIndex = $state(0);
+    let phraseInterval: ReturnType<typeof setInterval> | null = null;
+
+    const creationPhrases = [
+        'Scaffolding room...',
+        'Adding mysterious clues...',
+        'Hiding the secrets...',
+        'Placing red herrings...',
+        'Locking the doors...',
+        'Testing the puzzles...',
+        'Adding monologue...',
+        'Sprinkling suspense...',
+        'Polishing the atmosphere...',
+        'Recording narrator voice...',
+        'Calibrating difficulty...',
+        'Summoning escape vibes...'
+    ];
+
+    function startPhraseRotation() {
+        currentPhraseIndex = 0;
+        phraseInterval = setInterval(() => {
+            currentPhraseIndex = (currentPhraseIndex + 1) % creationPhrases.length;
+        }, 2000);
+    }
+
+    function stopPhraseRotation() {
+        if (phraseInterval) {
+            clearInterval(phraseInterval);
+            phraseInterval = null;
+        }
+    }
 
     // Sample JSON data for testing
     const sampleEscapeRoomJson = {
@@ -96,6 +131,30 @@
 
     function closePromptModal() {
         showPromptModal = false;
+    }
+
+    function handleCreateClick() {
+        showPremiumVoiceModal = true;
+    }
+
+    function closePremiumVoiceModal() {
+        showPremiumVoiceModal = false;
+    }
+
+    function submitWithVoice(withVoice: boolean) {
+        wantsPremiumVoice = withVoice;
+        showPremiumVoiceModal = false;
+        isCreating = true;
+        startPhraseRotation();
+        // Use setTimeout to ensure the hidden input value is updated before submit
+        setTimeout(() => {
+            formElement?.requestSubmit();
+        }, 0);
+    }
+
+    function handleFormResult() {
+        isCreating = false;
+        stopPhraseRotation();
     }
 
     async function generateWithAI() {
@@ -199,7 +258,13 @@
         </div>
     {/if}
 
-    <form method="POST" use:enhance class="space-y-6">
+    <form method="POST" use:enhance={() => {
+        return async ({ update }) => {
+            await update();
+            handleFormResult();
+        };
+    }} class="space-y-6" bind:this={formElement}>
+        <input type="hidden" name="wantsPremiumVoice" value={wantsPremiumVoice ? 'true' : 'false'} />
         <div class="card bg-base-200 shadow-xl">
             <div class="card-body">
                 <h2 class="card-title">Basic Information</h2>
@@ -370,7 +435,7 @@
                 + Add Chapter
             </button>
 
-            <button type="submit" class="btn btn-primary btn-lg">
+            <button type="button" class="btn btn-primary btn-lg" onclick={handleCreateClick}>
                 Create Escape Room
             </button>
         </div>
@@ -427,5 +492,87 @@
             </div>
         </div>
         <div class="modal-backdrop" onclick={closePromptModal} onkeydown={(e) => e.key === 'Enter' && closePromptModal()} role="button" tabindex="0"></div>
+    </div>
+{/if}
+
+<!-- Premium Voice Modal -->
+{#if showPremiumVoiceModal}
+    <div class="modal modal-open">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">🎙️ Premium Voice</h3>
+            
+            <p class="text-base-content/80 mb-4">
+                Would you like to add enhanced voice narration to your escape room chapters? Generating the room will take a bit longer, but vastly improves narration quality.
+            </p>
+
+            {#if !isPremium}
+                <div class="alert alert-info mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Premium Voice is available for Premium users only.</span>
+                </div>
+            {/if}
+
+            <div class="modal-action">
+                <button 
+                    type="button" 
+                    class="btn btn-ghost"
+                    onclick={closePremiumVoiceModal}
+                >
+                    Cancel
+                </button>
+                <button 
+                    type="button" 
+                    class="btn btn-outline"
+                    onclick={() => submitWithVoice(false)}
+                >
+                    No, skip voice
+                </button>
+                {#if isPremium}
+                    <button 
+                        type="button" 
+                        class="btn btn-primary"
+                        onclick={() => submitWithVoice(true)}
+                    >
+                        ✨ Yes, add voice
+                    </button>
+                {:else}
+                    <div class="tooltip" data-tip="Upgrade to Premium to unlock voice narration">
+                        <button 
+                            type="button" 
+                            class="btn btn-primary btn-disabled"
+                            disabled
+                        >
+                            ✨ Yes, add voice
+                        </button>
+                    </div>
+                {/if}
+            </div>
+        </div>
+        <div class="modal-backdrop" onclick={closePremiumVoiceModal} onkeydown={(e) => e.key === 'Enter' && closePremiumVoiceModal()} role="button" tabindex="0"></div>
+    </div>
+{/if}
+
+<!-- Creation Loading Modal -->
+{#if isCreating}
+    <div class="modal modal-open">
+        <div class="modal-box text-center">
+            <div class="flex flex-col items-center gap-6 py-4">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <div class="space-y-2">
+                    <h3 class="font-bold text-xl">Creating your escape room</h3>
+                    <p class="text-base-content/70 text-lg animate-pulse">
+                        {creationPhrases[currentPhraseIndex]}
+                    </p>
+                </div>
+                <p class="text-sm text-base-content/50">
+                    {#if wantsPremiumVoice}
+                        Generating voice narration may take a moment...
+                    {:else}
+                        This won't take long...
+                    {/if}
+                </p>
+            </div>
+        </div>
+        <div class="modal-backdrop"></div>
     </div>
 {/if}
