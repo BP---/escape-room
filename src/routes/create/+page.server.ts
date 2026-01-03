@@ -14,7 +14,8 @@ export const load = (async ({ locals }) => {
     }
 
     return {
-        user: locals.user
+        user: locals.user,
+        isPremium: locals.user.premium ?? false
     };
 }) satisfies PageServerLoad;
 

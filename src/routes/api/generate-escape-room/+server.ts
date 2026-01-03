@@ -28,6 +28,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         return error(401, { message: 'You must be logged in to generate an escape room' });
     }
 
+    // Check if user has premium subscription
+    if (!locals.user.premium) {
+        return error(403, { message: 'AI generation is a premium feature. Please upgrade to access this functionality.' });
+    }
+
     try {
         const { prompt } = await request.json();
 

@@ -4,6 +4,8 @@
 
     let { data, form }: PageProps = $props();
 
+    const isPremium = $derived(data.isPremium);
+
     interface Hint {
         id: number;
         content: string;
@@ -163,13 +165,25 @@
             >
                 Load Sample Data
             </button>
-            <button 
-                type="button" 
-                class="btn btn-primary btn-sm"
-                onclick={openPromptModal}
-            >
-                ✨ Generate with AI
-            </button>
+            {#if isPremium}
+                <button 
+                    type="button" 
+                    class="btn btn-primary btn-sm"
+                    onclick={openPromptModal}
+                >
+                    ✨ Generate with AI
+                </button>
+            {:else}
+                <div class="tooltip tooltip-left" data-tip="Upgrade to Premium to unlock AI generation">
+                    <button 
+                        type="button" 
+                        class="btn btn-primary btn-sm btn-disabled"
+                        disabled
+                    >
+                        ✨ Generate with AI
+                    </button>
+                </div>
+            {/if}
         </div>
     </div>
 

@@ -1,0 +1,1 @@
+ALTER TABLE `user` ADD `premium` integer DEFAULT false NOT NULL;
