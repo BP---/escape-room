@@ -12,4 +12,13 @@ export const auth = betterAuth({
             clientSecret: env.GITHUB_CLIENT_SECRET as string, 
         }, 
     },
+    user: {
+        additionalFields: {
+            premium: {
+                type: "boolean",
+                required: false,
+                defaultValue: false,
+            },
+        },
+    },
 });

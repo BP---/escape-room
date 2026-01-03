@@ -14,10 +14,10 @@ Route Structure:
 -/create
 -/user
 
-A user should be able to register with github, using better-auth, and be logged in. A logged in user can go to the /create route, where there is a form to create escape rooms. The app has an AI integration, which uses the Gemini API, and allows the user to prompt the LLM, and it uses structured output to make the escape-room. The user can also choose one of several provided themes, that will apply to the created escape-room.  
+A user should be able to register with github, using better-auth, and be logged in. A logged in user can go to the /create route, where there is a form to create escape rooms. A user can be a "premium" user, and some features are available only for premium users. The app has an AI integration, which uses the Gemini API, and allows the user to prompt the LLM, and it uses structured output to make the escape-room. The user can also choose one of several provided themes, that will apply to the created escape-room.  
 
 Database structure: 
-A user table, with data from github. 
+A user table, with data from github, and a "premium" field set to true or false. 
 escape-rooms table, with title, reference to a user, a theme for the escape-room. 
 chapters table with reference to escape-room. 
 hints table with reference to chapters. 
