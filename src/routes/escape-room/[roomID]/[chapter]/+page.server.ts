@@ -44,7 +44,8 @@ export const load = (async ({ params }) => {
             id: currentChapter.id,
             chapterNumber: currentChapter.chapterNumber,
             title: currentChapter.title,
-            content: currentChapter.content
+            content: currentChapter.content,
+            audioUrl: currentChapter.audioUrl
         },
         hints: chapterHints.map(h => ({
             id: h.id,
