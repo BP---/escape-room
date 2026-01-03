@@ -16,6 +16,8 @@ Route Structure:
 
 A user should be able to register with github, using better-auth, and be logged in. A logged in user can go to the /create route, where there is a form to create escape rooms. A user can be a "premium" user, and some features are available only for premium users. The app has an AI integration, which uses the Gemini API, and allows the user to prompt the LLM, and it uses structured output to make the escape-room. The user can also choose one of several provided themes, that will apply to the created escape-room.  
 
+A premium user has the option to add "Premium voice" to their escape rooms. This uses the Elevenlabs API to generate high quality audio files from the room and chapter descriptions, and saves the audio to Cloudflare R2. It also puts the link to the audio file in the database, so that it can be fetched for playback when a user is solving the escape rooms. 
+
 Database structure: 
 A user table, with data from github, and a "premium" field set to true or false. 
 escape-rooms table, with title, reference to a user, a theme for the escape-room. 

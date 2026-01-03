@@ -3,6 +3,7 @@
     import { onMount } from 'svelte';
     import { getRoomProgress, clearRoomProgress } from '$lib/stores/progress';
     import SpeechPlayer from '$lib/components/SpeechPlayer.svelte';
+    import AudioPlayer from '$lib/components/AudioPlayer.svelte';
 
     let { data }: PageProps = $props();
 
@@ -62,7 +63,9 @@
                         Created by {data.room.author}
                     </p>
                 </div>
-                {#if data.room.description}
+                {#if data.room.audioUrl}
+                    <AudioPlayer src={data.room.audioUrl} />
+                {:else if data.room.description}
                     <SpeechPlayer text={data.room.description} />
                 {/if}
             </div>

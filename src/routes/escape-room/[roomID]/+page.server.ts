@@ -24,6 +24,7 @@ export const load = (async ({ params }) => {
             id: room.id,
             title: room.title,
             description: room.description,
+            audioUrl: room.audioUrl,
             createdAt: room.createdAt,
             author: room.user.name
         },
