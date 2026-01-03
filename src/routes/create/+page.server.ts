@@ -77,12 +77,33 @@ export const actions = {
         try {
             const escapeRoomId = generateId();
             const isPremium = locals.user.premium ?? false;
+            const trimmedDescription = description?.trim() || null;
+
+            // For premium users who want voice, generate audio for the escape room description
+            let roomAudioUrl: string | null = null;
+            let roomAudioTextHash: string | null = null;
+
+            if (isPremium && wantsPremiumVoice && trimmedDescription) {
+                try {
+                    const audioArrayBuffer = await generateSpeech(trimmedDescription);
+                    const audioBuffer = Buffer.from(audioArrayBuffer);
+                    const timestamp = Date.now();
+                    const fileKey = `rooms/${escapeRoomId}/description-${timestamp}.mp3`;
+                    roomAudioUrl = await uploadAudio(audioBuffer, fileKey, 'audio/mpeg');
+                    roomAudioTextHash = hashText(trimmedDescription);
+                } catch (audioError) {
+                    // Log but don't fail the entire creation if audio generation fails
+                    console.error('Failed to generate audio for escape room description:', audioError);
+                }
+            }
 
             await db.insert(escapeRoom).values({
                 id: escapeRoomId,
                 title: title.trim(),
-                description: description?.trim() || null,
+                description: trimmedDescription,
                 theme: theme || 'light',
+                audioUrl: roomAudioUrl,
+                audioTextHash: roomAudioTextHash,
                 userId: locals.user.id
             });
 

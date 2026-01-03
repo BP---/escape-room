@@ -118,6 +118,8 @@ export const escapeRoom = sqliteTable(
     title: text("title").notNull(),
     description: text("description"),
     theme: text("theme").default("light").notNull(),
+    audioUrl: text("audio_url"),
+    audioTextHash: text("audio_text_hash"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
