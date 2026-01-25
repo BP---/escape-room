@@ -65,7 +65,7 @@ The difficulty should progress from easier to harder chapters.
 `;
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
+            model: env.GEMINI_MODEL as string,
             generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: {
